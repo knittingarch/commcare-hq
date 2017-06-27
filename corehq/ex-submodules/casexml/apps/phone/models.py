@@ -632,7 +632,7 @@ class IndexTree(DocumentSchema):
         return json.dumps(self.indices, indent=2)
 
     @staticmethod
-    def get_all_dependencies(case_id, child_index_tree, extension_index_tree, closed_cases):
+    def get_all_dependencies(case_id, child_cases, child_index_tree, extension_index_tree, closed_cases):
         """Takes a child and extension index tree and returns returns a set of all dependencies of <case_id>
 
         Traverse each incoming index, return each touched case.
@@ -649,12 +649,7 @@ class IndexTree(DocumentSchema):
             incoming_child_indices = child_index_tree.get_cases_that_directly_depend_on_case(case_to_check)
             all_incoming_indices = incoming_extension_indices | incoming_child_indices
             new_outgoing_cases_to_check = set(extension_index_tree.indices.get(case_to_check, {}).values())
-            closed_outgoing_extensions = new_outgoing_cases_to_check & closed_cases
-            closed_outgoing_extensions_not_children = {
-                closed_outgoing_extension
-                for closed_outgoing_extension in closed_outgoing_extensions
-                if not child_index_tree.reverse_indices.get(closed_outgoing_extension)
-            }
+            closed_outgoing_extensions_not_children = (new_outgoing_cases_to_check & closed_cases) - child_cases
             new_cases_to_check = (new_outgoing_cases_to_check | all_incoming_indices) - all_cases - closed_outgoing_extensions_not_children
 
             cases_to_check |= new_cases_to_check
@@ -757,6 +752,14 @@ class SimplifiedSyncLog(AbstractSyncLog):
             self._purged_cases = set()
         return self._purged_cases
 
+    _child_cases = None
+
+    @property
+    def child_cases(self):
+        if self._child_cases is None:
+            self._child_cases = set(self.index_tree.reverse_indices.keys())
+        return self._child_cases
+
     def save(self, *args, **kwargs):
         # force doc type to SyncLog to avoid changing the couch view.
         self.doc_type = "SyncLog"
@@ -832,6 +835,7 @@ class SimplifiedSyncLog(AbstractSyncLog):
         """
         relevant = IndexTree.get_all_dependencies(
             case_id,
+            child_cases=self.child_cases,
             child_index_tree=self.index_tree,
             extension_index_tree=self.extension_index_tree,
             closed_cases=self.closed_cases,
