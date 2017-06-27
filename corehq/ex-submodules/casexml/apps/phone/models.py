@@ -632,7 +632,7 @@ class IndexTree(DocumentSchema):
         return json.dumps(self.indices, indent=2)
 
     @staticmethod
-    def get_all_dependencies(case_id, child_index_tree, extension_index_tree):
+    def get_all_dependencies(case_id, child_index_tree, extension_index_tree, closed_cases):
         """Takes a child and extension index tree and returns returns a set of all dependencies of <case_id>
 
         Traverse each incoming index, return each touched case.
@@ -649,7 +649,13 @@ class IndexTree(DocumentSchema):
             incoming_child_indices = child_index_tree.get_cases_that_directly_depend_on_case(case_to_check)
             all_incoming_indices = incoming_extension_indices | incoming_child_indices
             new_outgoing_cases_to_check = set(extension_index_tree.indices.get(case_to_check, {}).values())
-            new_cases_to_check = (new_outgoing_cases_to_check | all_incoming_indices) - all_cases
+            closed_outgoing_extensions = new_outgoing_cases_to_check & closed_cases
+            closed_outgoing_extensions_not_children = {
+                closed_outgoing_extension
+                for closed_outgoing_extension in closed_outgoing_extensions
+                if not child_index_tree.reverse_indices.get(closed_outgoing_extension)
+            }
+            new_cases_to_check = (new_outgoing_cases_to_check | all_incoming_indices) - all_cases - closed_outgoing_extensions_not_children
 
             cases_to_check |= new_cases_to_check
 
@@ -828,6 +834,7 @@ class SimplifiedSyncLog(AbstractSyncLog):
             case_id,
             child_index_tree=self.index_tree,
             extension_index_tree=self.extension_index_tree,
+            closed_cases=self.closed_cases,
         )
         _get_logger().debug("Relevant cases of {}: {}".format(case_id, relevant))
         return relevant
