@@ -632,7 +632,7 @@ class IndexTree(DocumentSchema):
         return json.dumps(self.indices, indent=2)
 
     @staticmethod
-    def get_all_dependencies(case_id, child_cases, child_index_tree, extension_index_tree, closed_cases):
+    def get_all_dependencies(case_id, child_index_tree, extension_index_tree, removed_cases):
         """Takes a child and extension index tree and returns returns a set of all dependencies of <case_id>
 
         Traverse each incoming index, return each touched case.
@@ -643,17 +643,16 @@ class IndexTree(DocumentSchema):
         while cases_to_check:
             case_to_check = cases_to_check.pop()
             all_cases.add(case_to_check)
-            incoming_extension_indices = extension_index_tree.get_cases_that_directly_depend_on_case(
-                case_to_check
-            )
-            incoming_child_indices = child_index_tree.get_cases_that_directly_depend_on_case(case_to_check)
-            all_incoming_indices = incoming_extension_indices | incoming_child_indices
-            new_outgoing_cases_to_check = set(extension_index_tree.indices.get(case_to_check, {}).values())
-            closed_outgoing_extensions_not_children = (new_outgoing_cases_to_check & closed_cases) - child_cases
-            new_cases_to_check = (new_outgoing_cases_to_check | all_incoming_indices) - all_cases - closed_outgoing_extensions_not_children
+            if case_to_check not in removed_cases:
+                incoming_extension_indices = extension_index_tree.get_cases_that_directly_depend_on_case(
+                    case_to_check
+                )
+                incoming_child_indices = child_index_tree.get_cases_that_directly_depend_on_case(case_to_check)
+                all_incoming_indices = incoming_extension_indices | incoming_child_indices
+                new_outgoing_cases_to_check = set(extension_index_tree.indices.get(case_to_check, {}).values())
+                new_cases_to_check = (new_outgoing_cases_to_check | all_incoming_indices) - all_cases
 
-            cases_to_check |= new_cases_to_check
-
+                cases_to_check |= new_cases_to_check
         return all_cases
 
     @staticmethod
@@ -743,6 +742,8 @@ class SimplifiedSyncLog(AbstractSyncLog):
     extension_index_tree = SchemaProperty(IndexTree)  # index tree of extensions
     closed_cases = SetProperty(unicode)
     extensions_checked = BooleanProperty(default=False)
+
+    _removed_cases = set()
 
     _purged_cases = None
 
@@ -835,10 +836,9 @@ class SimplifiedSyncLog(AbstractSyncLog):
         """
         relevant = IndexTree.get_all_dependencies(
             case_id,
-            child_cases=self.child_cases,
             child_index_tree=self.index_tree,
             extension_index_tree=self.extension_index_tree,
-            closed_cases=self.closed_cases,
+            removed_cases=self._removed_cases,
         )
         _get_logger().debug("Relevant cases of {}: {}".format(case_id, relevant))
         return relevant
@@ -900,6 +900,7 @@ class SimplifiedSyncLog(AbstractSyncLog):
         """Remove all cases marked for removal. Traverse child cases and try to purge those too."""
 
         _get_logger().debug("cases to to_remove: {}".format(all_to_remove))
+        self._removed_cases |= all_to_remove
         for to_remove in all_to_remove:
             indices = self.index_tree.indices.get(to_remove, {})
             self._remove_case(to_remove, all_to_remove, checked_case_id, quiet_errors)
