@@ -4,11 +4,13 @@ import os
 from StringIO import StringIO
 
 from couchdbkit import ResourceConflict, ResourceNotFound
+from django.conf import settings
 from django.contrib import messages
 from django.urls import RegexURLResolver, Resolver404
 from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import render
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.utils.translation import ugettext_lazy as _
 
 from corehq import toggles
@@ -233,6 +235,12 @@ def download_file(request, domain, app_id, path):
         full_path = 'files/%s/%s' % (build_profile, path)
     else:
         full_path = 'files/%s' % path
+
+    if request.app._id != app_id and settings.SHARED_DRIVE_CONF.transfer_enabled:
+        response = HttpResponse()
+        # TODO: handle profiles which are requested as url params instead of url paths
+        response['X-Accel-Redirect'] = reverse(download_file, args=[domain, request.app._id, path])
+        return response
 
     def resolve_path(path):
         return RegexURLResolver(
