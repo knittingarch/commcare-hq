@@ -102,8 +102,11 @@ class UserDeviceTest(SimpleTestCase):
     def test_only_update_once_per_day(self):
         user = CommCareUser()
         now = datetime.utcnow()
-        later = now + timedelta(hours=1)
-        day_later = now + timedelta(days=1)
+        later = now + timedelta(minutes=1)
+        if later.date() > now.date():
+            now = later  # prevent test failures when running close to midnight
+            later = now + timedelta(minutes=1)
+        day_later = later + timedelta(days=1)
         device = 'device'
         self.assertTrue(user.update_device_id_last_used(device, now))
         self.assertFalse(user.update_device_id_last_used(device, later))
