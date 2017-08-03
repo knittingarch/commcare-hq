@@ -13,6 +13,7 @@ from casexml.apps.case import const
 from casexml.apps.case.const import CASE_ACTION_UPDATE, CASE_ACTION_CREATE
 from casexml.apps.case.dbaccessors import get_indexed_case_ids
 from casexml.apps.case.exceptions import PhoneDateValueError
+from corehq.apps.hqcase.utils import SYSTEM_FORM_XMLNS
 from casexml.apps.phone.models import SyncLogAssertionError, get_properly_wrapped_sync_log
 from casexml.apps.phone.xml import get_case_element
 from casexml.apps.stock.models import StockReport
@@ -41,7 +42,7 @@ def validate_phone_datetime(datetime_string, none_ok=False, form_id=None):
         raise PhoneDateValueError('{!r}'.format(datetime_string))
 
 
-def post_case_blocks(case_blocks, form_extras=None, domain=None):
+def post_case_blocks(case_blocks, form_extras=None, domain=None, form_xmlns=SYSTEM_FORM_XMLNS):
     """
     Post case blocks.
 
@@ -61,7 +62,8 @@ def post_case_blocks(case_blocks, form_extras=None, domain=None):
     return submit_case_blocks(
         [ElementTree.tostring(case_block) for case_block in case_blocks],
         domain=domain,
-        form_extras=form_extras
+        form_extras=form_extras,
+        form_xmlns=form_xmlns,
     )
 
 

@@ -4,6 +4,7 @@ import uuid
 
 from casexml.apps.case.mock import CaseBlock
 from casexml.apps.case.util import post_case_blocks
+from corehq.apps.hqcase.utils import SYSTEM_FORM_XMLNS
 from casexml.apps.case.const import DEFAULT_CASE_INDEX_IDENTIFIERS, CASE_INDEX_CHILD
 
 
@@ -65,10 +66,11 @@ class CaseFactory(object):
     easier to work with to setup parent/child structures or default properties.
     """
 
-    def __init__(self, domain=None, case_defaults=None, form_extras=None):
+    def __init__(self, domain=None, case_defaults=None, form_extras=None, form_xmlns=SYSTEM_FORM_XMLNS):
         self.domain = domain
         self.case_defaults = case_defaults if case_defaults is not None else {}
         self.form_extras = form_extras if form_extras is not None else {}
+        self.form_xmlns = form_xmlns
 
     def get_case_block(self, case_id, **kwargs):
         for k, v in self.case_defaults.items():
@@ -87,6 +89,7 @@ class CaseFactory(object):
             caseblocks,
             form_extras=submit_form_extras,
             domain=self.domain,
+            form_xmlns=self.form_xmlns,
         )
 
     def create_case(self, **kwargs):
