@@ -26,13 +26,15 @@ ALLOWED_CASE_IDENTIFIER_TYPES = [
 
 
 def submit_case_blocks(case_blocks, domain, username="system", user_id="",
-                       xmlns=SYSTEM_FORM_XMLNS, attachments=None,
+                       xmlns=None, attachments=None,
                        form_id=None, form_extras=None, case_db=None):
     """
     Submits casexml in a manner similar to how they would be submitted from a phone.
 
     returns the UID of the resulting form.
     """
+    if xmlns is None:
+        xmlns = SYSTEM_FORM_XMLNS
     attachments = attachments or {}
     now = json_format_datetime(datetime.datetime.utcnow())
     if not isinstance(case_blocks, basestring):

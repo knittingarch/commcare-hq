@@ -66,7 +66,7 @@ class CaseFactory(object):
     easier to work with to setup parent/child structures or default properties.
     """
 
-    def __init__(self, domain=None, case_defaults=None, form_extras=None, form_xmlns=SYSTEM_FORM_XMLNS):
+    def __init__(self, domain=None, case_defaults=None, form_extras=None, form_xmlns=None):
         self.domain = domain
         self.case_defaults = case_defaults if case_defaults is not None else {}
         self.form_extras = form_extras if form_extras is not None else {}

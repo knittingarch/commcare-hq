@@ -42,7 +42,7 @@ def validate_phone_datetime(datetime_string, none_ok=False, form_id=None):
         raise PhoneDateValueError('{!r}'.format(datetime_string))
 
 
-def post_case_blocks(case_blocks, form_extras=None, domain=None, form_xmlns=SYSTEM_FORM_XMLNS):
+def post_case_blocks(case_blocks, form_extras=None, domain=None, form_xmlns=None):
     """
     Post case blocks.
 
@@ -53,6 +53,9 @@ def post_case_blocks(case_blocks, form_extras=None, domain=None, form_xmlns=SYST
 
     if form_extras is None:
         form_extras = {}
+
+    if form_xmlns is None:
+        form_xmlns = SYSTEM_FORM_XMLNS
 
     domain = domain or form_extras.pop('domain', None)
     if getattr(settings, 'UNIT_TESTING', False):
