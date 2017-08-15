@@ -256,7 +256,7 @@ def month_start(spec, context):
                         'type': 'base_iteration_number'
                     }
                 },
-                'statement': 'iteration - 3'
+                'statement': 'iteration - 1'
             }
         }
     }
@@ -283,7 +283,7 @@ def month_end(spec, context):
                         'type': 'base_iteration_number'
                     }
                 },
-                'statement': 'iteration - 3'
+                'statement': 'iteration - 1'
             }
         }
     }

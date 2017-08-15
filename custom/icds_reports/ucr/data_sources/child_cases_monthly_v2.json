@@ -17,10 +17,7 @@
         0,
         1,
         2,
-        3,
-        4,
-        5,
-        6
+        3
       ],
       "type": "iterator"
     },
@@ -1561,27 +1558,7 @@
         "type": "icds_month_start"
       },
       "display_month": {
-        "date_expression": {
-          "date_expression": {
-            "expression": {
-              "datatype": null,
-              "type": "property_name",
-              "property_name": "modified_on"
-            },
-            "type": "root_doc"
-          },
-          "type": "add_months",
-          "months_expression": {
-            "type": "evaluator",
-            "context_variables": {
-              "iteration": {
-                "type": "base_iteration_number"
-              }
-            },
-            "statement": "iteration - 3"
-          }
-        },
-        "type": "month_start_date"
+        "type": "icds_month_start"
       },
       "parent_id": {
         "type": "icds_parent_id"
