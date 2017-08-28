@@ -95,6 +95,11 @@
                                     {% endif %}
 
                                     <div class="bottom-right" >
+                                        {% if day.show_treatment_start_date %}
+                                            <div class="icon">
+                                                <img class="icon" src="{% static "enikshay/images/treatment_start_date.png" %}">
+                                            </div>
+                                        {% endif %}
                                         {% if day.show_conflicting_data %}
                                             <div class="middle-icon">
                                                 <img class="icon" src="{% static "enikshay/images/conflicting_data.png" %}">
