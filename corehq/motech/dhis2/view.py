@@ -12,6 +12,7 @@ from corehq.motech.dhis2.models import DataValueMap, DataSetMap, JsonApiLog
 from corehq.motech.dhis2.tasks import send_datasets, refresh_dhis2_name_cache
 from corehq.apps.domain.decorators import domain_admin_required
 from corehq.apps.domain.views import BaseAdminProjectSettingsView
+from dimagi.utils.couch import get_redis_client
 from dimagi.utils.decorators.memoized import memoized
 from dimagi.utils.web import json_response
 
@@ -161,3 +162,40 @@ class Dhis2LogDetailView(BaseAdminProjectSettingsView, DetailView):
 def send_dhis2_data(request, domain):
     send_datasets.delay(domain, send_now=True)
     return json_response({'success': _('Data is being sent to DHIS2.')}, status_code=202)
+
+
+def get_data_sets(request, domain):
+    cache = get_redis_client()
+    key = domain + '_dhis2_id_display_names'
+    dhis2_data = cache.get(key)
+    # TODO: If it's expired, go fetch it again
+    return json_response([
+        {'id': item['id'], 'name': item['name']}
+        for item in dhis2_data['data_sets']
+    ])
+
+
+def get_data_elements(request, domain, data_set_id):
+    cache = get_redis_client()
+    key = domain + '_dhis2_id_display_names'
+    dhis2_data = cache.get(key)
+    try:
+        return json_response([
+            {'id': item['id'], 'name': item['name']}
+            for item in dhis2_data['data_sets'][data_set_id]['data_elements']
+        ])
+    except KeyError:
+        return json_response({'error': 'Unknown dataSetId'}, status_code=400)
+
+
+def get_cat_opt_combos(request, domain, data_set_id):
+    cache = get_redis_client()
+    key = domain + '_dhis2_id_display_names'
+    dhis2_data = cache.get(key)
+    try:
+        return json_response([
+            {'id': item['id'], 'name': item['name']}
+            for item in dhis2_data['data_sets'][data_set_id]['category_option_combos']
+        ])
+    except KeyError:
+        return json_response({'error': 'Unknown dataSetId'}, status_code=400)
