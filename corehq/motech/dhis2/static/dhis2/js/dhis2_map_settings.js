@@ -8,6 +8,7 @@ hqDefine('dhis2/js/dhis2_map_settings', function () {
     var DataValueMap = function (properties) {
         var self = this;
 
+        self.dataSetMap = properties["dataSetMap"];
         self.ucrColumn = ko.observable(properties["column"]);
         self.dataElementId = ko.observable(properties["data_element_id"]);
         self.categoryOptionComboId = ko.observable(properties["category_option_combo_id"]);
@@ -22,6 +23,34 @@ hqDefine('dhis2/js/dhis2_map_settings', function () {
                 "category_option_combo_id": self.categoryOptionComboId(),
                 "comment": self.dhis2Comment(),
             };
+        };
+
+        self.dataElements = [];
+        self.getDataElements = function () {
+            if (self.dataElements === [] && Boolean(self.dataSetMap.dataSetId())) {
+                $.get(
+                    'datasets/' + self.dataSetMap.dataSetId() + '/elems/',
+                    {},
+                    function (data) {
+                        self.dataElements = data;
+                    }
+                );
+            }
+            return self.dataElements;
+        };
+
+        self.categoryOptionCombos = [];
+        self.getCategoryOptionCombos = function () {
+            if (self.categoryOptionCombos === [] && Boolean(self.dataSetMap.dataSetId())) {
+                $.get(
+                    'datasets/' + self.dataSetMap.dataSetId() + '/elems/',
+                    {},
+                    function (data) {
+                        self.categoryOptionCombos = data;
+                    }
+                );
+            }
+            return self.categoryOptionCombos;
         };
     };
 
@@ -53,7 +82,9 @@ hqDefine('dhis2/js/dhis2_map_settings', function () {
         self.init = function () {
             if (properties.hasOwnProperty("datavalue_maps") && properties["datavalue_maps"].length > 0) {
                 for (var i = 0; i < properties["datavalue_maps"].length; i++) {
-                    self.dataValueMaps.push(new DataValueMap(properties["datavalue_maps"][i]));
+                    self.dataValueMaps.push(new DataValueMap(
+                        Object.assign(properties["datavalue_maps"][i], {"dataSetMap": self})
+                    ));
                 }
             } else {
                 self.addDataValueMap();
@@ -61,7 +92,7 @@ hqDefine('dhis2/js/dhis2_map_settings', function () {
         };
 
         self.addDataValueMap = function () {
-            self.dataValueMaps.push(new DataValueMap({}));
+            self.dataValueMaps.push(new DataValueMap({"dataSetMap": self}));
         };
 
         self.removeDataValueMap = function (dataValueMap) {
@@ -88,6 +119,20 @@ hqDefine('dhis2/js/dhis2_map_settings', function () {
                 "complete_date": self.completeDate(),
                 "datavalue_maps": dataValueMaps,
             };
+        };
+
+        self.dataSets = [];
+        self.getDataSets = function () {
+            if (self.dataSets === []) {
+                $.get(
+                    'datasets/',
+                    {},
+                    function (data) {
+                        self.dataSets = data;
+                    }
+                );
+            }
+            return self.dataSets;
         };
     };
 
