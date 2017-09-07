@@ -9,7 +9,7 @@ from corehq import toggles
 from corehq.motech.dhis2.dbaccessors import get_dhis2_connection, get_dataset_maps
 from corehq.motech.dhis2.forms import Dhis2ConnectionForm
 from corehq.motech.dhis2.models import DataValueMap, DataSetMap, JsonApiLog
-from corehq.motech.dhis2.tasks import send_datasets
+from corehq.motech.dhis2.tasks import send_datasets, refresh_dhis2_name_cache
 from corehq.apps.domain.decorators import domain_admin_required
 from corehq.apps.domain.views import BaseAdminProjectSettingsView
 from dimagi.utils.decorators.memoized import memoized
@@ -27,6 +27,7 @@ class Dhis2ConnectionView(BaseAdminProjectSettingsView):
         if form.is_valid():
             form.save(self.domain)
             get_dhis2_connection.clear(request.domain)
+            refresh_dhis2_name_cache.delay(request.domain)
             return HttpResponseRedirect(self.page_url)
         context = self.get_context_data(**kwargs)
         return self.render_to_response(context)
